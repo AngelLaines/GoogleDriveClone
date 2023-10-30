@@ -10,18 +10,15 @@ import NavLink from '../NavLink.vue';
     <nav 
         class="min-w-[200px]"
     >
-        <div
+        <Link 
+            :href="route('myFiles')"
             class="h-[80px] px-3 flex items-center gap-3"
         >
-            <Link 
-                href="/"
-            >
-                <ApplicationLogo
-                    class="block h-9 w-auto fill-current text-gray-800"
-                />
-            </Link>
+            <ApplicationLogo
+                class="block h-9 w-auto fill-current text-gray-800"
+            />
             LaraStorage
-        </div>
+        </Link>
         <div 
             class="px-3"
         >
@@ -30,7 +27,10 @@ import NavLink from '../NavLink.vue';
             <div
                 class="py-3"
             >
-                <NavLink href="/">
+                <NavLink 
+                    :href="route('myFiles')"
+                    :active="$page.url==='/my-files'"
+                >
                     My Files
                 </NavLink>
                 <NavLink href="/">
