@@ -1,7 +1,13 @@
 <script setup>
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
-import ResponsiveNavLink from '../ResponsiveNavLink.vue';
+import CreateFolderModal from './CreateFolderModal.vue';
+import { ref } from 'vue';
 
+function showCreateFolderModal(){
+  createFolderModal.value=true;
+}
+
+const createFolderModal = ref(false);
 
 </script>
 
@@ -29,7 +35,7 @@ import ResponsiveNavLink from '../ResponsiveNavLink.vue';
         >
         <div class="px-1 py-1">
             <MenuItem v-slot="{ active }">
-                <a class="text-gray-700 block px-4 py-2 text-sm">
+                <a href="#" @click="showCreateFolderModal" class="text-gray-700 block px-4 py-2 text-sm">
                     New Folder
                 </a>
             </MenuItem>
@@ -50,4 +56,7 @@ import ResponsiveNavLink from '../ResponsiveNavLink.vue';
         </MenuItems>
       </transition>
     </Menu>
+    <CreateFolderModal
+      v-model = "createFolderModal"
+    />
 </template>

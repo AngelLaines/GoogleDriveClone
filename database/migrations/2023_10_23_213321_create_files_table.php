@@ -19,10 +19,10 @@ return new class extends Migration
             $table->boolean('is_folder');
             $table->string('mime')->nullable();
             $table->integer('size')->nullable();
-            //$table->timestamps();
+            $table->timestamps();
             $table->foreignIdFor(\App\Models\User::class,'created_by');
             $table->foreignIdFor(\App\Models\User::class,'updated_by');
-            $table->timestamps();
+            $table->softDeletes();
         });
     }
 
