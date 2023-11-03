@@ -35,7 +35,7 @@ const createFolderModal = ref(false);
         >
         <div class="px-1 py-1">
             <MenuItem v-slot="{ active }">
-                <a href="#" @click="showCreateFolderModal" class="text-gray-700 block px-4 py-2 text-sm">
+                <a href="#" @click.prevent="showCreateFolderModal" class="text-gray-700 block px-4 py-2 text-sm">
                     New Folder
                 </a>
             </MenuItem>
