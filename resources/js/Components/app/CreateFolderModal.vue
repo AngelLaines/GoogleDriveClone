@@ -1,5 +1,5 @@
 <script setup>
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import InputError from '../InputError.vue';
 import InputLabel from '../InputLabel.vue';
 import Modal from '../Modal.vue';
@@ -16,8 +16,9 @@ const folderNameInput = ref(null);
 
 
 const emit = defineEmits(['update:modelValue']);
-
+const page = usePage();
 function createFolder(){
+    form.parent_id = page.props.folder.id;
     form.post(route('folder.create'),{
         preserveScroll:true,
         onSuccess:()=>{
@@ -41,7 +42,8 @@ function onShow(){
 }
 
 const form = useForm({
-    name:''
+    name:'',
+    parent_id:null,
 })
 </script>
 
