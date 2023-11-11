@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreFileRequest;
 use App\Http\Requests\StoreFolderRequest;
 use App\Http\Resources\FileResource;
 use App\Models\File;
@@ -31,6 +32,8 @@ class FileController extends Controller
 
         $ancestors = FileResource::collection([...$folder->ancestors,$folder]);
 
+        $folder = new FileResource($folder);
+
         return Inertia::render("MyFiles",compact('files','folder','ancestors'));
     }
 
@@ -48,6 +51,12 @@ class FileController extends Controller
         $file->name = $data['name'];
 
         $parent->appendNode($file);
+    }
+
+    function store(StoreFileRequest $request){
+        $data = $request->validated();
+
+        dd($data);
     }
 
     private function getRoot()

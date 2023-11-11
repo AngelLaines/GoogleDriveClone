@@ -2,6 +2,47 @@
 import SearchForm from '@/Components/app/SearchForm.vue';
 import Navigation from '@/Components/app/Navigation.vue';
 import UserSettingsDropdown from '@/Components/app/UserSettingsDropdown.vue';
+import {emitter,FILE_UPLOAD_STARTED} from '../event-bus.js';
+import { onMounted, ref  } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
+
+onMounted(() => {
+    emitter.on(FILE_UPLOAD_STARTED,uploadFiles)
+});
+
+const dragOver=ref(false);
+
+const page=usePage();
+const fileUploadForm = useForm({
+    files:[],
+    relative_paths:[],
+    parent_id:null
+});
+
+function uploadFiles(files){
+    console.log(files);
+    fileUploadForm.parent_id=page.props.folder.id;
+    fileUploadForm.files = files;
+
+    fileUploadForm.relative_paths = [...files].map(f=>f.webkitRelativePath)
+
+    fileUploadForm.post(route('file.store'));
+}
+
+function handleDrop(ev){
+    dragOver.value=false;
+    const files = ev.dataTransfer.files;
+    if (!files.length) {
+        return
+    }
+    uploadFiles(files);
+}
+function onDragOver(){
+    dragOver.value = true;
+}
+function onDragLeave(){
+    dragOver.value = false;
+}
 </script>
 
 <template>
@@ -11,19 +52,45 @@ import UserSettingsDropdown from '@/Components/app/UserSettingsDropdown.vue';
         <Navigation/>
 
         <main
+            @drop.prevent="handleDrop"
+            @dragover.prevent="onDragOver"
+            @dragleave.prevent="onDragLeave"
             class="flex flex-col flex-1 px-4 overflow-hidden"
+            :class="dragOver ? 'dropzone' : ''"
         >
-            <div
-                class="flex items-center justify-between w-full"
+            <template
+                v-if="dragOver"
+                class="text-gray-500 text-center py-8 text-sm"
+                
             >
-                <SearchForm/>
-                <UserSettingsDropdown/>
-            </div>
-            <div
-                class="flex-1 flex flex-col overflow-hidden"
-            >
-                <slot></slot>
-            </div>
+                Drop files here to upload
+            </template>
+            <template v-else>
+                <div
+                    class="flex items-center justify-between w-full"
+                >
+                    <SearchForm/>
+                    <UserSettingsDropdown/>
+                </div>
+                <div
+                    class="flex-1 flex flex-col overflow-hidden"
+                >
+                    <slot></slot>
+                </div>
+            </template>
         </main>
     </div>    
 </template>
+
+<style scoped>
+
+.dropzone{
+    width: 100%;
+    height: 100%;
+    color:#8d8d8d;
+    border: 2px dashed gray;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+</style>

@@ -2,6 +2,8 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
 import CreateFolderModal from './CreateFolderModal.vue';
 import { ref } from 'vue';
+import FileUploadMenuItem from './FileUploadMenuItem.vue';
+import FolderUploadMenuItem from './FolderUploadMenuItem.vue';
 
 function showCreateFolderModal(){
   createFolderModal.value=true;
@@ -41,16 +43,8 @@ const createFolderModal = ref(false);
             </MenuItem>
           </div>
           <div class="px-1 py-1">
-            <MenuItem v-slot="{ active }">
-                <a class="text-gray-700 block px-4 py-2 text-sm">
-                    Upload Folder
-                </a>
-            </MenuItem>
-            <MenuItem v-slot="{ active }">
-                <a class="text-gray-700 block px-4 py-2 text-sm">
-                    Upload Files
-                </a>
-            </MenuItem>
+            <FileUploadMenuItem/>
+            <FolderUploadMenuItem/>
           </div>
           
         </MenuItems>
