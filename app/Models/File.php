@@ -53,6 +53,7 @@ class File extends Model
         return $this->parent_id === null;
     }
 
+
     public function get_file_size()
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
