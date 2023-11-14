@@ -13,11 +13,15 @@ const props = defineProps({
         >
             Uploading {{ form.files.length }} files
         </div>
-        <div
-            class="h-full bg-gray-900 rounded-md transition-all"
-            :style="{width:form.progress.percentage+'%'}"
+        <div 
+            class="h-3 bg-gray-100 rounded-md"
         >
+            <div 
+                class="h-full bg-gray-900 rounded-md transition-all" 
+                :style="{width: form.progress.percentage+'%'}"
+            >
 
+            </div>
         </div>
     </div>
 </template>
