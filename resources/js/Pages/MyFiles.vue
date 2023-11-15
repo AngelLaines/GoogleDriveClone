@@ -3,9 +3,10 @@ import FileIcon from '@/Components/app/FileIcon.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { onUpdated } from 'vue';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import {httpGet} from '@/Helper/http-helper.js';
 import Checkbox from '@/Components/Checkbox.vue';
+import DeleteFilesButton from '@/Components/app/DeleteFilesButton.vue';
 const props = defineProps({
     files:Object,
     folder:Object,
@@ -59,8 +60,27 @@ function toggleFileSelect(file){
 function onSelectCheckboxChange(file) {
     if (!selected.value[file.id]) {
         allSelected.value=false;
+    } else {
+        let checked = true;
+
+        for (let file of allFiles.value.data) {
+            if (!selected.value[file.id]) {
+                checked = false;
+                break;
+            }
+            
+        }
+
+        allSelected.value= checked;
     }
 }
+
+function onDelete(){
+    allSelected.value = false;
+    selected.value = {};
+}
+
+const selectedIds = computed(()=>Object.entries(selected.value).filter(a=>a[1]).map(a=>a[0]))
 
 onUpdated(() => {
     allFiles.value = {
@@ -139,6 +159,15 @@ onMounted(()=>{
                     </li>
 
                 </ol>
+
+                <div>
+                    <DeleteFilesButton 
+                        :delete-all="allSelected"
+                        :delete-ids="selectedIds"
+
+                        @delete="onDelete"
+                    />
+                </div>
             </nav>
             <div
                 class="flex-1 overflow-auto"
