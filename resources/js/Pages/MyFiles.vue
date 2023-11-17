@@ -7,6 +7,7 @@ import { onMounted, ref, computed } from 'vue';
 import {httpGet} from '@/Helper/http-helper.js';
 import Checkbox from '@/Components/Checkbox.vue';
 import DeleteFilesButton from '@/Components/app/DeleteFilesButton.vue';
+import DownloadFilesButton from '@/Components/app/DownloadFilesButton.vue';
 const props = defineProps({
     files:Object,
     folder:Object,
@@ -161,6 +162,12 @@ onMounted(()=>{
                 </ol>
 
                 <div>
+                    <DownloadFilesButton
+                        :all="allSelected"
+                        :ids="selectedIds"
+
+                        class="mr-2"
+                    />
                     <DeleteFilesButton 
                         :delete-all="allSelected"
                         :delete-ids="selectedIds"
@@ -172,6 +179,7 @@ onMounted(()=>{
             <div
                 class="flex-1 overflow-auto"
             >
+
                 <table
                     class="min-w-full"
                 >
