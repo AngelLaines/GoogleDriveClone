@@ -8,11 +8,6 @@ import { httpGet } from '@/Helper/http-helper';
 
 
 const page = usePage();
-const form = useForm({
-    all:null,
-    ids:[],
-    parent_id:null
-});
 
 const props = defineProps({
     all:{
@@ -33,8 +28,10 @@ function download(){
 
     const p = new URLSearchParams();
 
+    p.append('parent_id',page.props.folder.id);
+
     if(props.all){
-        p.append('all',props.all);
+        p.append('all',props.all?1:0);
     } else {
         for(let id of props.ids){
             p.append('ids[]',id);
