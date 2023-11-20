@@ -79,31 +79,31 @@ class File extends Model
     //            Storage::delete($model->storage_path);
     //        }
     //    });
+}
+    public function moveToTrash()
+    {
+        $this->deleted_at = Carbon::now();
+
+        return $this->save();
     }
 
-    // public function moveToTrash()
-    // {
-    //     $this->deleted_at = Carbon::now();
 
-    //     return $this->save();
-    // }
+    public function deleteForever()
+    {
+        $this->deleteFilesFromStorage([$this]);
+        $this->forceDelete();
+    }
 
-    // public function deleteForever()
-    // {
-    //     $this->deleteFilesFromStorage([$this]);
-    //     $this->forceDelete();
-    // }
-
-    // public function deleteFilesFromStorage($files)
-    // {
-    //     foreach ($files as $file) {
-    //         if ($file->is_folder) {
-    //             $this->deleteFilesFromStorage($file->children);
-    //         } else {
-    //             Storage::delete($file->storage_path);
-    //         }
-    //     }
-    // }
+    public function deleteFilesFromStorage($files)
+    {
+        foreach ($files as $file) {
+            if ($file->is_folder) {
+                $this->deleteFilesFromStorage($file->children);
+            } else {
+                Storage::delete($file->storage_path);
+            }
+        }
+    }
 
     // public static function getSharedWithMe()
     // {

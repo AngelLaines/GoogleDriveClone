@@ -8,12 +8,23 @@ const show = ref(false);
 const message = ref('');
 const type = ref('success');
 
+function close(){
+    show.value = false;
+    type.value = '';
+    message.value = '';
+}
 
 onMounted(()=>{
+    let timeout;
     emitter.on(SHOW_NOTIFICATION,({type:t,message:msg})=>{
         show.value = true;
         type.value = t;
         message.value = msg;
+
+        if(timeout) clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            close();
+        }, 5000);
     });
 });
 
