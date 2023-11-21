@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AddToFavouritesRequest;
 use App\Http\Requests\StoreFileRequest;
 use App\Http\Requests\StoreFolderRequest;
 use App\Http\Requests\FilesActionRequest;
 use App\Http\Requests\TrashFilesRequest;
 use App\Http\Resources\FileResource;
 use App\Models\File;
+use App\Models\StarredFile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -18,9 +21,10 @@ class FileController extends Controller
 {
     public function myFiles(Request $request, string $folder = null)
     {
-        
+
         if ($folder) {
-            $folder = File::query()->where('created_by', Auth::id())
+            $folder = File::query()
+                ->where('created_by', Auth::id())
                 ->where('path', $folder)
                 ->firstOrFail();
         }
@@ -28,10 +32,12 @@ class FileController extends Controller
             $folder = $this->getRoot();
         }
         $files = File::query()
+            ->with('starred')
             ->where('parent_id', $folder->id)
             ->where('created_by', Auth::id())
             ->orderBy('is_folder', 'desc')
             ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         $files = FileResource::collection($files);
@@ -47,20 +53,21 @@ class FileController extends Controller
         return Inertia::render("MyFiles", compact('files', 'folder', 'ancestors'));
     }
 
-    public function trash(Request $request){
+    public function trash(Request $request)
+    {
         $files = File::onlyTrashed()
-            ->where('created_by',Auth::id())
-            ->orderBy('is_folder','desc')
-            ->orderBy('deleted_at','desc')
+            ->where('created_by', Auth::id())
+            ->orderBy('is_folder', 'desc')
+            ->orderBy('deleted_at', 'desc')
             ->paginate(10);
 
         $files = FileResource::collection($files);
-        
+
         if ($request->wantsJson()) {
             return $files;
         }
 
-        return Inertia::render('Trash',compact('files'));
+        return Inertia::render('Trash', compact('files'));
     }
 
     public function createFolder(StoreFolderRequest $request)
@@ -145,48 +152,49 @@ class FileController extends Controller
 
         return to_route('myFiles', ['folder' => $parent->path]);
     }
-    
-    public function restore(TrashFilesRequest $request){
+
+    public function restore(TrashFilesRequest $request)
+    {
         $data = $request->validated();
-        if($data['all']){
+        if ($data['all']) {
             $children = File::onlyTrashed()->get();
-            foreach($children as $child){
+            foreach ($children as $child) {
                 $child->restore();
             }
         } else {
-            $ids = $data['ids']??[];
-            $children = File::onlyTrashed()->whereIn('id',$ids)->get();
+            $ids = $data['ids'] ?? [];
+            $children = File::onlyTrashed()->whereIn('id', $ids)->get();
             // dd($children);
-            foreach($children as $child){
+            foreach ($children as $child) {
                 $child->restore();
             }
         }
 
         return to_route('trash');
-    
     }
-    public function deleteForever(TrashFilesRequest $request){
+    public function deleteForever(TrashFilesRequest $request)
+    {
         $data = $request->validated();
-        if($data['all']){
+        if ($data['all']) {
             $children = File::onlyTrashed()->get();
-            foreach($children as $child){
+            foreach ($children as $child) {
                 $child->deleteForever();
             }
         } else {
-            $ids = $data['ids']??[];
-            $children = File::onlyTrashed()->whereIn('id',$ids)->get();
+            $ids = $data['ids'] ?? [];
+            $children = File::onlyTrashed()->whereIn('id', $ids)->get();
             // dd($children);
-            foreach($children as $child){
+            foreach ($children as $child) {
                 $child->deleteForever();
             }
         }
 
         return to_route('trash');
-    
     }
-    
 
-    public function download(FilesActionRequest $request){
+
+    public function download(FilesActionRequest $request)
+    {
         $data = $request->validated();
         $parent = $request->parent;
 
@@ -199,40 +207,39 @@ class FileController extends Controller
             ];
         }
 
-        if($all){
+        if ($all) {
             $url = $this->createZip($parent->children);
-            $filename = $parent->name.'.zip';
+            $filename = $parent->name . '.zip';
         } else {
-            if (count($ids)===1) {
+            if (count($ids) === 1) {
                 $file = File::find($ids[0]);
                 if ($file->is_folder) {
-                    if($file->children->count()===0){
+                    if ($file->children->count() === 0) {
                         return [
                             'message' => 'The folder is empty'
                         ];
                     }
-                    
-                    $url = $this->createZip($file->children);
-                    $filename = $file->name.'.zip';
 
+                    $url = $this->createZip($file->children);
+                    $filename = $file->name . '.zip';
                 } else {
-                    $dest = 'public/'.pathinfo($file->storage_path,PATHINFO_BASENAME);
-                    Storage::copy($file->storage_path,$dest);
+                    $dest = 'public/' . pathinfo($file->storage_path, PATHINFO_BASENAME);
+                    Storage::copy($file->storage_path, $dest);
 
                     $url = asset(Storage::url($dest));
                     $filename = $file->name;
                 }
             } else {
-                $files = File::query()->whereIn('id',$ids)->get();
+                $files = File::query()->whereIn('id', $ids)->get();
                 $url = $this->createZip($files);
 
-                $filename = $parent->name.'.zip';
+                $filename = $parent->name . '.zip';
             }
         }
 
         return [
-            'url'=>$url,
-            'filename'=>$filename
+            'url' => $url,
+            'filename' => $filename
         ];
     }
 
@@ -250,8 +257,9 @@ class FileController extends Controller
         $parent->appendNode($model);
     }
 
-    public function createZip($files):string{
-        $zipPath = 'zip/'. Str ::random().'.zip';
+    public function createZip($files): string
+    {
+        $zipPath = 'zip/' . Str::random() . '.zip';
         $publicPath = "public/$zipPath";
 
         if (!is_dir(dirname($publicPath))) {
@@ -262,8 +270,8 @@ class FileController extends Controller
 
         $zip = new \ZipArchive();
 
-        if ($zip->open($zipFile,\ZipArchive::CREATE | \ZipArchive::OVERWRITE)===true) {
-            $this->addFilesToZip($zip,$files);
+        if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+            $this->addFilesToZip($zip, $files);
         }
 
         $zip->close();
@@ -271,13 +279,44 @@ class FileController extends Controller
         return asset(Storage::url($zipPath));
     }
 
-    private function addFilesToZip($zip,$files,$ancestors=''){
+    private function addFilesToZip($zip, $files, $ancestors = '')
+    {
         foreach ($files as $file) {
             if ($file->is_folder) {
-                $this->addFilesToZip($zip,$file->children,$ancestors.$file->name.'/');
+                $this->addFilesToZip($zip, $file->children, $ancestors . $file->name . '/');
             } else {
-                $zip->addFile(Storage::path($file->storage_path),$ancestors.$file->name);
+                $zip->addFile(Storage::path($file->storage_path), $ancestors . $file->name);
             }
         }
+    }
+
+    public function addToFavourites(AddToFavouritesRequest $request)
+    {
+        $data = $request->validated();
+
+        $id = $data['id'];
+        $file = File::find($id);
+
+        $user_id = Auth::id();
+
+        $starredFile = StarredFile::query()
+            ->where('file_id', $file->id)
+            ->where('user_id', $user_id)
+            ->first();
+
+        if ($starredFile) {
+            $starredFile->delete();
+        } else {
+            StarredFile::create([
+                'file_id' => $file->id,
+                'user_id' => $user_id,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
+            ]);
+        }
+
+
+        return redirect()->back();
+        // return to_route('myFiles',['folder'=>$parent->path]);
     }
 }
