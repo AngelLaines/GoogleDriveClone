@@ -9,30 +9,36 @@ import PrimaryButton from '../PrimaryButton.vue';
 import { ref, nextTick } from 'vue';
 import { showSuccessNotification } from '@/event-bus';
 
-const {modelValue} = defineProps({
-    modelValue:Boolean
+const props = defineProps({
+    modelValue:Boolean,
+    allSelected: Boolean,
+    selectedIds: Array
 })
 
-const folderNameInput = ref(null);
-const form = useForm({
-    name:'',
-    parent_id:null,
-})
+const emailInput = ref(null);
+
 
 const emit = defineEmits(['update:modelValue']);
 const page = usePage();
-function createFolder(){
-    const name = form.name;
-    form.parent_id = page.props.folder.id;
-    form.post(route('folder.create'),{
-        preserveScroll:true,
-        onSuccess:()=>{
-            closeModal();
-            showSuccessNotification(`The folder "${name}" was created`)
+function share(){
+    form.parent_id = page.props.folder.id
+    if (props.allSelected) {
+        form.all = true;
+        form.ids = [];
+    }  else {
+        form.ids = props.selectedIds
+    }
+    const email = form.email
+    form.post(route('file.share'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            closeModal()
             form.reset();
+            // Show success notification
+            showSuccessNotification(`Selected files will be shared to "${email}" if the emails exists in the system`)
         },
-        onError:()=>folderNameInput.value.focus()
-    });
+        onError: () => emailInput.value.focus()
+    })
 }
 
 function closeModal(){
@@ -42,15 +48,20 @@ function closeModal(){
 }
 
 function onShow(){
-    nextTick(()=>folderNameInput.value.focus())
+    nextTick(()=>emailInput.value.focus())
 }
 
-
+const form = useForm({
+    email: null,
+    all: false,
+    ids:[],
+    parent_id: null
+})
 </script>
 
 <template>
     <Modal 
-        :show="modelValue" 
+        :show="props.modelValue" 
         max-width="sm"
         @show="onShow"
     >
@@ -60,28 +71,27 @@ function onShow(){
             <h2
                 class="mt-6"
             >
-                Create New Folder
+                Share files
             </h2>
             <div 
                 class="mt-6"
             >
                 <InputLabel 
-                    for="folderName"
-                    value="Folder Name"
+                    for="shareEmail"
+                    value="Enter Email Adress"
                 />
                 <TextInput 
                     type="text"
-                    ref="folderNameInput"
-                    id="folderName"
-                    v-model="form.name"
+                    ref="emailInput"
+                    id="shareEmail"
+                    v-model="form.email"
                     class="mt-1 block w-full"
-                    :class="form.errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                    placeholder="Folder Name"
-                    @keyup.enter = "createFolder"
+                    placeholder="Enter Email Adress"
+                    :class="form.errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                    @keyup.enter = "share"
                 />
-
                 <InputError 
-                    :message="form.errors.name"
+                    :message="form.errors.email"
                     class="mt-2"
                 />
             </div>
@@ -95,7 +105,7 @@ function onShow(){
                 </SecondaryButton>
                 <PrimaryButton
                     class="ml-3"
-                    @click="createFolder"
+                    @click="share"
                     :class="{'opacity-25':form.processing}"
                     :disable="form.processing"
                 >

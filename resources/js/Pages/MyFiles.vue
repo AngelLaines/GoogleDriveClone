@@ -9,11 +9,14 @@ import Checkbox from '@/Components/Checkbox.vue';
 import DeleteFilesButton from '@/Components/app/DeleteFilesButton.vue';
 import DownloadFilesButton from '@/Components/app/DownloadFilesButton.vue';
 import { showSuccessNotification } from '@/event-bus';
+import ShareFilesButton from '@/Components/app/ShareFilesButton.vue';
 const props = defineProps({
     files:Object,
     folder:Object,
     ancestors:Object
 });
+
+let params = null;
 
 const page = usePage();
 
@@ -23,6 +26,7 @@ const allFiles = ref({
     next: props.files.links.next
 });
 const allSelected = ref(false);
+const onlyFavourites = ref(false);
 const selected = ref({});
 
 
@@ -94,6 +98,15 @@ function addRemoveFavourite(file){
     });
 }
 
+function showOnlyFavourites(){
+    if(onlyFavourites.value){
+        params.set('favourites',1);
+    } else {
+        params.delete('favourites');
+    }
+    router.get(window.location.pathname+'?'+params.toString());
+}
+
 const selectedIds = computed(()=>Object.entries(selected.value).filter(a=>a[1]).map(a=>a[0]))
 
 onUpdated(() => {
@@ -104,6 +117,10 @@ onUpdated(() => {
 });
 
 onMounted(()=>{
+
+    params = new URLSearchParams(window.location.search);
+    onlyFavourites.value = params.get('favourites')==='1';
+
     const observer = new IntersectionObserver((entries)=> entries.forEach(entry=>entry.isIntersecting && loadMore()) ,{
         rootMargin:'-250px 0px 0px 0px'
     });
@@ -174,8 +191,15 @@ onMounted(()=>{
 
                 </ol>
 
-                <div>
-                    
+                <div class="flex">
+                    <label class="flex items-center mr-3">
+                        Only Favourites
+                        <Checkbox class="ml-2" @change="showOnlyFavourites()" v-model:checked="onlyFavourites"></Checkbox>
+                    </label>
+                    <ShareFilesButton
+                        :all-selected="allSelected"
+                        :selected-ids="selectedIds"
+                    ></ShareFilesButton>
                     <DownloadFilesButton
                         :all="allSelected"
                         :ids="selectedIds"
