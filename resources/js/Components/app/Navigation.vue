@@ -33,10 +33,16 @@ import NavLink from '../NavLink.vue';
                 >
                     My Files
                 </NavLink>
-                <NavLink href="/">
+                <NavLink 
+                    :href="route('file.sharedWithMe')"
+                    :active="$page.url==='/shared-with-me'"
+                >
                     Shared with me
                 </NavLink>
-                <NavLink href="/">
+                <NavLink 
+                    :href="route('file.sharedByMe')"
+                    :active="$page.url==='/shared-by-me'"
+                >
                     Shared by me
                 </NavLink>
                 <NavLink 

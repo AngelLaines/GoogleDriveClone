@@ -10,6 +10,7 @@ import DeleteFilesButton from '@/Components/app/DeleteFilesButton.vue';
 import DownloadFilesButton from '@/Components/app/DownloadFilesButton.vue';
 import { showSuccessNotification } from '@/event-bus';
 import ShareFilesButton from '@/Components/app/ShareFilesButton.vue';
+import { emitter, ON_SEARCH } from '@/event-bus.js';
 const props = defineProps({
     files:Object,
     folder:Object,
@@ -17,9 +18,9 @@ const props = defineProps({
 });
 
 let params = null;
-
 const page = usePage();
 
+let search = ref('');
 const loadMoreIntersect = ref(null);
 const allFiles = ref({
     data: props.files.data,
@@ -120,6 +121,11 @@ onMounted(()=>{
 
     params = new URLSearchParams(window.location.search);
     onlyFavourites.value = params.get('favourites')==='1';
+
+    search.value = params.get('search')
+    emitter.on(ON_SEARCH, (value) => {
+        search.value = value
+    })
 
     const observer = new IntersectionObserver((entries)=> entries.forEach(entry=>entry.isIntersecting && loadMore()) ,{
         rootMargin:'-250px 0px 0px 0px'
@@ -240,6 +246,12 @@ onMounted(()=>{
                             Name
                         </th>
                         <th 
+                            v-if="search" 
+                            class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                        >
+                            Path
+                        </th>
+                        <th 
                             class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
                         >
                             Owner
@@ -313,6 +325,12 @@ onMounted(()=>{
                                     :file="file"
                                 />
                                 {{ file.name }}
+                            </td>
+                            <td 
+                                v-if="search" 
+                                class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                            >
+                                {{ file.path }}
                             </td>
                             <td 
                                 class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
